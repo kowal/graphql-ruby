@@ -579,6 +579,31 @@ describe GraphQL::Schema::Argument do
       assert_equal ["echo has the wrong arguments"], res["errors"].map { |e| e["message"] }
     end
   end
+  
+  describe "required: :nullable" do
+    class RequiredNullableSchema < GraphQL::Schema
+      class Query < GraphQL::Schema::Object
+        field :echo, String do
+          argument :num, Integer, required: :nullable
+        end
+
+        def echo(str:)
+          str
+        end
+      end
+
+      query(Query)
+    end
+
+    it "requires a value, even if it's null" do
+      res = RequiredNullableSchema.execute('{ echo(num: "ok") }')
+      assert_equal "ok", res["data"]["echo"]
+      res = RequiredNullableSchema.execute('{ echo(num: null) }')
+      assert_nil res["data"].fetch("echo")
+      res = RequiredNullableSchema.execute('{ echo }')
+      assert_equal ["echo has the wrong arguments"], res["errors"].map { |e| e["message"] }
+    end
+  end
 
   describe "replace_null_with_default: true" do
     class ReplaceNullWithDefaultSchema < GraphQL::Schema
